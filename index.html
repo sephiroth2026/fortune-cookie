@@ -1,0 +1,588 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>Aerith's Lucky Cookie</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Pixelify+Sans:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+/* Layout: one tall pastel pixel sky. Title screen standing on grass with 3 parallax hills,
+   then cookie-select carousel, crack stage, fortune book, goal-flag footer.
+   Fixed sky layers (sparkles, far clouds, near clouds, floaters) scroll at different speeds. */
+:root{
+  --ink:#3a2a5e; --ink-2:#6a579a;
+  --pink:#ff86b3; --pink-d:#e85d96; --pink-l:#ffd3e4;
+  --mint:#8eefc9; --mint-d:#4fc9a0;
+  --butter:#ffe27a; --butter-d:#f2b84b;
+  --lav:#b9a2ff; --lav-d:#8d74e6;
+  --paper:#fffaf1;
+  --f-display:'Press Start 2P','Courier New',monospace;
+  --f-body:'Pixelify Sans','Courier New',monospace;
+  --pxb:0 -4px 0 0 var(--ink),0 4px 0 0 var(--ink),-4px 0 0 0 var(--ink),4px 0 0 0 var(--ink);
+  --tsh:-.09em 0 var(--ink),.09em 0 var(--ink),0 -.09em var(--ink),0 .09em var(--ink),-.09em -.09em var(--ink),.09em -.09em var(--ink),-.09em .09em var(--ink),.09em .09em var(--ink),0 .18em var(--ink),.09em .18em var(--ink),-.09em .18em var(--ink);
+  color-scheme:light;
+}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+body{margin:0;background:#8fd3ff;color:var(--ink);font-family:var(--f-body);font-size:18px;line-height:1.4;-webkit-tap-highlight-color:transparent}
+canvas,img,.ico,.hill,.ground,.pt{image-rendering:crisp-edges;image-rendering:pixelated}
+:focus-visible{outline:4px dashed var(--ink);outline-offset:6px}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+
+/* ---------- fixed sky ---------- */
+#fx{position:fixed;inset:0;z-index:0;overflow:hidden;pointer-events:none}
+.sky{position:absolute;inset:0;background:linear-gradient(180deg,#6cc4ff 0 12%,#86d0ff 12% 25%,#a9dcff 25% 38%,#cfdfff 38% 50%,#ecd9ff 50% 62%,#ffd8ee 62% 76%,#ffe3dc 76% 88%,#fff0cf 88% 100%)}
+.fl{position:absolute;left:0;top:0;width:100%;will-change:transform}
+.fl img{position:absolute;display:block;max-width:none}
+.tw{animation:tw 2.4s steps(2) infinite}
+.sway{animation:sway 10s steps(8) infinite alternate}
+.bob{animation:bob 2.4s steps(3) infinite alternate}
+@keyframes tw{50%{opacity:.2}}
+@keyframes sway{to{transform:translateX(34px)}}
+@keyframes bob{to{transform:translateY(-10px)}}
+@keyframes blink{50%{opacity:0}}
+
+/* ---------- sprites in css ---------- */
+.ico{display:inline-block;width:18px;height:18px;flex:none;vertical-align:middle;background-position:center;background-size:contain;background-repeat:no-repeat}
+.ico.star{background-image:var(--spr-star)}
+.ico.heart{background-image:var(--spr-heart)}
+.ico.al{width:21px;height:27px;background-image:var(--spr-al)}
+.ico.ar{width:21px;height:27px;background-image:var(--spr-ar)}
+.ico.off{opacity:.3;filter:grayscale(1)}
+
+/* ---------- shared pieces ---------- */
+main{position:relative;z-index:1;overflow-x:clip}
+.wrap{width:100%;max-width:1000px;margin-inline:auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.center{text-align:center}
+.px{background:var(--paper);color:var(--ink);box-shadow:var(--pxb);margin:4px auto}
+.sec{position:relative;padding-block:clamp(60px,10vw,110px)}
+.tag{display:inline-block;font-family:var(--f-display);font-size:10px;line-height:1.3;background:var(--butter);padding:8px 10px;margin:4px;box-shadow:var(--pxb)}
+.h{font-family:var(--f-display);font-size:clamp(16px,4.8vw,30px);line-height:1.4;color:#fff;margin:16px 0 20px;text-wrap:balance;text-shadow:var(--tsh)}
+.lede{max-width:540px;padding:14px 18px;font-size:19px}
+
+.btn{--b:var(--pink);--bd:var(--pink-d);
+  font-family:var(--f-display);font-size:clamp(10px,3.1vw,13px);line-height:1.5;color:var(--ink);text-align:center;
+  background:var(--b);border:0;padding:16px 20px;margin:4px;cursor:pointer;max-width:100%;
+  display:inline-flex;align-items:center;justify-content:center;gap:12px;position:relative;
+  box-shadow:0 -4px 0 0 var(--ink),-4px 0 0 0 var(--ink),4px 0 0 0 var(--ink),0 4px 0 0 var(--bd),-4px 4px 0 0 var(--ink),4px 4px 0 0 var(--ink),0 8px 0 0 var(--ink),inset 0 6px 0 0 rgba(255,255,255,.55);
+  transition:transform .06s steps(2)}
+.btn:hover{transform:translateY(-2px)}
+.btn:active{transform:translateY(4px)}
+.btn.mint{--b:var(--mint);--bd:var(--mint-d)}
+.btn.butter{--b:var(--butter);--bd:var(--butter-d)}
+.btn.lav{--b:var(--lav);--bd:var(--lav-d)}
+.btn.big{font-size:clamp(11px,3.4vw,15px);padding:20px 26px}
+.btn.sq{padding:14px 16px}
+.btn.blink span{animation:blink 1s steps(2) infinite}
+
+/* ---------- hud + toast ---------- */
+.hud{position:fixed;top:0;left:0;right:0;z-index:20;display:flex;justify-content:space-between;align-items:flex-start;gap:10px;pointer-events:none;
+  padding:calc(10px + env(safe-area-inset-top,0px)) max(14px,env(safe-area-inset-right,0px)) 0 max(14px,env(safe-area-inset-left,0px))}
+.hud>*{pointer-events:auto}
+.chip{font-family:var(--f-display);font-size:9px;line-height:1;color:var(--ink);background:var(--paper);border:0;padding:10px 10px;margin:4px;box-shadow:var(--pxb);display:flex;gap:8px;align-items:center}
+button.chip{cursor:pointer}
+.toast{position:fixed;left:50%;bottom:calc(18px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);z-index:30;background:var(--ink);color:#fff;font-family:var(--f-display);font-size:10px;line-height:1.7;padding:12px 14px;box-shadow:0 0 0 4px #fff;max-width:calc(100% - 48px);text-align:center;opacity:0;pointer-events:none;transition:opacity .15s steps(2)}
+.toast.show{opacity:1}
+
+/* ---------- hero ---------- */
+.hero{position:relative;min-height:max(100svh,700px);overflow:hidden;display:flex}
+.hero>.wrap{position:relative;z-index:3;flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:clamp(14px,3vh,24px);padding-block:92px 170px;text-align:center}
+.hill{position:absolute;left:0;right:0;height:320px;background-repeat:repeat-x;background-position:0 100%;background-size:800px 320px;will-change:transform}
+#hl1{bottom:60px;background-image:var(--spr-hill1);z-index:1}
+#hl2{bottom:34px;background-image:var(--spr-hill2);z-index:1}
+#hl3{bottom:8px;background-image:var(--spr-hill3);z-index:2}
+.ground{position:absolute;left:0;right:0;bottom:0;height:70px;z-index:2;background:#d9a46f var(--spr-ground) 0 0/80px 70px repeat-x}
+.ribbon{display:inline-flex;align-items:center;gap:10px;font-family:var(--f-display);font-size:10px;line-height:1.3;padding:10px 14px}
+.logo{margin:0;font-family:var(--f-display);line-height:1.3;display:flex;flex-direction:column;gap:.5em;align-items:center}
+.logo .l1{font-size:clamp(28px,10.4vw,78px);color:var(--pink);text-shadow:var(--tsh)}
+.logo .l2{font-size:clamp(15px,5.2vw,40px);color:#fff;text-shadow:var(--tsh)}
+.hero-cookie{width:min(42vw,170px);height:auto;display:block;animation:bob 1.6s steps(3) infinite alternate}
+.sub{font-size:clamp(18px,4.6vw,22px);padding:10px 16px;max-width:420px;font-weight:600}
+.ticker{width:min(100%,520px);overflow:hidden;background:var(--ink);color:var(--butter);font-family:var(--f-display);font-size:10px;line-height:1;padding:12px 0;margin:4px;box-shadow:0 0 0 4px #fff}
+.ticker .in{display:inline-flex;white-space:nowrap;animation:tick 22s steps(180) infinite}
+.ticker span{display:inline-flex;align-items:center;gap:14px;padding-right:14px}
+.ticker .ico{width:14px;height:14px}
+@keyframes tick{to{transform:translateX(-50%)}}
+.tiny{font-family:var(--f-display);font-size:9px;line-height:1.8;color:#fff;margin:0;text-shadow:var(--tsh)}
+
+/* ---------- carousel ---------- */
+.car{--sw:min(76vw,380px)}
+.track{position:relative;display:flex;gap:22px;overflow-x:auto;scroll-snap-type:x mandatory;padding:26px calc(50% - var(--sw)/2) 34px;scrollbar-width:none;-webkit-overflow-scrolling:touch}
+.track::-webkit-scrollbar{display:none}
+.slide{flex:0 0 var(--sw);scroll-snap-align:center;background:var(--c);margin:4px;padding:16px 14px 18px;box-shadow:var(--pxb);display:flex;flex-direction:column;align-items:center;gap:10px;text-align:center;cursor:pointer;
+  transform:scale(.86);opacity:.7;transition:transform .18s steps(3),opacity .18s steps(3)}
+.slide.on{transform:none;opacity:1}
+.s-no{font-family:var(--f-display);font-size:9px;color:var(--ink-2)}
+.s-cookie{width:76%}
+.s-cookie canvas{width:100%;height:auto;display:block}
+.slide.on .s-cookie canvas{animation:bob 1.4s steps(3) infinite alternate}
+.s-name{font-family:var(--f-display);font-size:13px;line-height:1.5}
+.s-sp{font-size:18px;font-weight:600}
+.stats{width:100%;display:grid;gap:7px}
+.stat{display:grid;grid-template-columns:64px 1fr;align-items:center;gap:8px;font-family:var(--f-display);font-size:8px;text-align:left}
+.pips{display:flex;gap:3px}
+.pips i{flex:1;height:10px;background:rgba(58,42,94,.16)}
+.pips i.f{background:var(--bar)}
+.ctrl{display:flex;align-items:center;justify-content:center;gap:16px;margin-bottom:24px}
+.dots{display:flex;gap:12px}
+.dots button{width:16px;height:16px;padding:0;border:0;background:#fff;box-shadow:0 0 0 3px var(--ink);margin:3px;cursor:pointer}
+.dots button[aria-current="true"]{background:var(--pink);transform:scale(1.3)}
+
+/* ---------- stage ---------- */
+.screen{position:relative;width:min(100%,560px);height:clamp(470px,125vw,560px);margin:8px auto 30px;overflow:hidden;box-shadow:var(--pxb);background:conic-gradient(#ffe9f2 25%,#fff 0 50%,#ffe9f2 0 75%,#fff 0) 0 0/40px 40px}
+.screen .lt{position:absolute;top:12px;left:14px;font-family:var(--f-display);font-size:9px;line-height:1.4}
+.taps{position:absolute;top:10px;right:12px;display:flex;gap:6px}
+.hint{position:absolute;left:50%;top:13%;transform:translateX(-50%);font-family:var(--f-display);font-size:10px;line-height:1;padding:10px 12px;margin:0;animation:bob .8s steps(2) infinite alternate;white-space:nowrap}
+.hint::after{content:"";position:absolute;left:50%;bottom:-12px;margin-left:-6px;border:6px solid transparent;border-top-color:var(--ink)}
+.cookie{position:absolute;left:50%;top:54%;width:min(70%,300px);padding:0;border:0;background:none;display:block;cursor:pointer;transform:translate(-50%,-50%);transition:top .5s steps(6)}
+.cookie:disabled{cursor:default}
+.cookie-in{display:block;position:relative;width:100%;aspect-ratio:34/26}
+.cookie.idle .cookie-in{animation:bob 1.2s steps(3) infinite alternate}
+.cookie .cookie-in.shk{animation:shake .4s steps(4)}
+@keyframes shake{0%{transform:translate(0,0) rotate(0)}25%{transform:translate(-10px,0) rotate(-5deg)}50%{transform:translate(10px,0) rotate(5deg)}75%{transform:translate(-6px,0) rotate(-3deg)}100%{transform:translate(0,0)}}
+.half{position:absolute;top:0;width:50%;height:100%;display:block;transition:transform .5s steps(6)}
+.half.l{left:0}
+.half.r{right:0}
+.sh{position:absolute;left:12%;right:12%;bottom:-18px;height:12px;background:rgba(58,42,94,.2);clip-path:polygon(6% 0,94% 0,100% 50%,94% 100%,6% 100%,0 50%)}
+.cookie.open{top:84%}
+.cookie.open .sh{opacity:0}
+.cookie.open .l{transform:translate(-48%,10%) rotate(-20deg) scale(.55)}
+.cookie.open .r{transform:translate(48%,10%) rotate(20deg) scale(.55)}
+.burst{position:absolute;left:50%;top:54%;width:0;height:0;z-index:8}
+.pt{position:absolute;left:0;top:0;width:18px;height:18px;margin:-9px;background-position:center;background-size:contain;background-repeat:no-repeat;pointer-events:none;animation:pop .9s steps(9) forwards}
+@keyframes pop{0%{transform:translate(0,0) scale(.4);opacity:1}70%{opacity:1}100%{transform:translate(var(--dx),var(--dy)) scale(1.2);opacity:0}}
+.slip{position:absolute;left:50%;top:44px;width:min(90%,440px);margin:0;padding:0 0 12px;background:var(--paper);box-shadow:var(--pxb);transform:translateX(-50%);transform-origin:50% 100%;z-index:5;text-align:left}
+.slip.in{animation:slipin .55s steps(6) both}
+@keyframes slipin{from{transform:translateX(-50%) translateY(80px) scaleY(.15)}to{transform:translateX(-50%)}}
+.slip-top{height:14px;background:repeating-linear-gradient(90deg,var(--pink) 0 14px,#fff 14px 28px)}
+.slip-head{display:flex;justify-content:space-between;align-items:center;gap:8px;font-family:var(--f-display);font-size:9px;line-height:1.3;padding:12px 16px 0}
+.new{background:var(--butter);padding:5px 6px;animation:blink 1s steps(2) infinite}
+.q{margin:0;padding:10px 18px 0;font-size:clamp(19px,5vw,23px);line-height:1.35;font-weight:600;min-height:5.6em}
+.from{display:flex;justify-content:flex-end;align-items:center;gap:8px;margin:6px 18px 0;padding-top:10px;border-top:4px dotted var(--pink);font-family:var(--f-display);font-size:10px}
+.row{display:flex;flex-wrap:wrap;gap:18px;justify-content:center}
+
+/* ---------- book ---------- */
+.book{max-width:640px;padding:20px 18px 22px;text-align:left}
+.meter{display:flex;align-items:center;gap:14px;font-family:var(--f-display);font-size:10px;margin-bottom:20px}
+.bar{flex:1;height:18px;margin:4px;background:#ece5ff;box-shadow:0 0 0 4px var(--ink)}
+.bar i{display:block;height:100%;width:0;background:repeating-linear-gradient(90deg,var(--pink) 0 10px,var(--pink-d) 10px 12px);transition:width .4s steps(10)}
+.grid{display:grid;grid-template-columns:repeat(5,1fr);gap:14px;padding:4px}
+@media(min-width:560px){.grid{grid-template-columns:repeat(6,1fr)}}
+.tile{aspect-ratio:1;padding:0;border:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;font-family:var(--f-display);font-size:10px;color:var(--ink-2);background:#efe9ff;box-shadow:var(--pxb)}
+.tile:disabled{cursor:default}
+.tile.on{background:var(--butter);color:var(--ink);cursor:pointer}
+.tile.on:hover{transform:translateY(-2px)}
+.tile .ico{width:58%;height:auto;aspect-ratio:1}
+.tile.sel{background:var(--pink-l)}
+.reader{margin-top:22px;padding:14px 16px;background:#fff3c4;box-shadow:var(--pxb);font-size:19px;font-weight:600;min-height:92px}
+.reader b{display:block;font-family:var(--f-display);font-size:9px;margin-bottom:8px;font-weight:400}
+
+/* ---------- goal ---------- */
+.goal{position:relative;overflow:hidden;padding-top:80px;min-height:520px}
+.goal>.wrap{position:relative;z-index:3;display:flex;flex-direction:column;align-items:center;padding-bottom:130px}
+.goal .hill{bottom:52px;background-image:var(--spr-hill3);z-index:1}
+.msg{max-width:520px;padding:18px 20px;text-align:center;font-size:20px;font-weight:600}
+.sig{display:flex;justify-content:center;align-items:center;gap:10px;margin:14px 0 0;font-family:var(--f-display);font-size:13px;color:var(--pink-d)}
+.flag{position:absolute;right:max(26px,9vw);bottom:70px;width:8px;height:170px;background:var(--ink);z-index:2}
+.flag::before{content:"";position:absolute;left:-6px;top:-16px;width:20px;height:16px;background:var(--butter);box-shadow:0 0 0 4px var(--ink)}
+.flag::after{content:"";position:absolute;left:8px;top:6px;width:64px;height:46px;background:var(--pink);clip-path:polygon(0 0,100% 50%,0 100%);animation:wave 1s steps(2) infinite alternate}
+@keyframes wave{to{transform:scaleX(.8) translateY(3px)}}
+
+@media (prefers-reduced-motion:reduce){
+  *,*::before,*::after{animation-duration:.001ms!important;animation-iteration-count:1!important;transition-duration:.001ms!important}
+}
+</style>
+
+<div id="fx" aria-hidden="true"><div class="sky"></div></div>
+
+<div class="hud">
+  <div class="chip"><i class="ico heart"></i><span id="hud-count">00/30</span></div>
+  <button class="chip" id="snd" type="button" aria-pressed="true">SOUND ON</button>
+</div>
+
+<main>
+  <header class="hero" id="top">
+    <div class="hill" id="hl1" data-s=".55"></div>
+    <div class="hill" id="hl2" data-s=".36"></div>
+    <div class="hill" id="hl3" data-s=".16"></div>
+    <div class="ground"></div>
+    <div class="wrap">
+      <div class="px ribbon"><i class="ico heart"></i>SEPHIROTH PRESENTS</div>
+      <h1 class="logo"><span class="l1">AERITH'S</span><span class="l2">LUCKY COOKIE</span></h1>
+      <canvas id="hero-cookie" class="hero-cookie" aria-hidden="true"></canvas>
+      <p class="px sub">Pick a cookie. Crack it. Read your lucky words.</p>
+      <div class="ticker" aria-hidden="true"><div class="in">
+        <span>GOOD LUCK <i class="ico star"></i> KEEP ON LEARNING <i class="ico star"></i> TRY YOUR BEST <i class="ico star"></i></span>
+        <span>GOOD LUCK <i class="ico star"></i> KEEP ON LEARNING <i class="ico star"></i> TRY YOUR BEST <i class="ico star"></i></span>
+      </div></div>
+      <button class="btn big blink" id="start" type="button"><i class="ico star"></i><span>PRESS START</span></button>
+      <p class="tiny">1 PLAYER &nbsp;/&nbsp; FROM: SEPHIROTH</p>
+    </div>
+  </header>
+
+  <section class="sec" id="select">
+    <div class="wrap center">
+      <span class="tag">WORLD 1-1</span>
+      <h2 class="h">SELECT YOUR COOKIE</h2>
+      <p class="px lede">Swipe or tap the arrows. Every flavor holds the same kind words, with a different sparkle.</p>
+      <div class="car" role="region" aria-roledescription="carousel" aria-label="Cookie flavors">
+        <div class="track" id="track" tabindex="0"></div>
+        <div class="ctrl">
+          <button class="btn sq lav" id="prev" type="button" aria-label="Previous cookie"><i class="ico al"></i></button>
+          <div class="dots" id="dots"></div>
+          <button class="btn sq lav" id="next" type="button" aria-label="Next cookie"><i class="ico ar"></i></button>
+        </div>
+        <button class="btn big" id="pick" type="button"><i class="ico heart"></i><span>Choose this cookie</span></button>
+      </div>
+    </div>
+  </section>
+
+  <section class="sec" id="stage">
+    <div class="wrap center">
+      <span class="tag">WORLD 1-2</span>
+      <h2 class="h">CRACK THE COOKIE</h2>
+      <div class="screen" id="screen">
+        <span class="lt">TAP x3</span>
+        <div class="taps" id="taps" aria-hidden="true"></div>
+        <div class="px hint" id="hint" aria-hidden="true">TAP ME!</div>
+        <button class="cookie idle" id="cookie" type="button" aria-label="Fortune cookie. Tap to crack it.">
+          <i class="sh"></i>
+          <span class="cookie-in"><canvas class="half l" id="half-l" width="17" height="26"></canvas><canvas class="half r" id="half-r" width="17" height="26"></canvas></span>
+        </button>
+        <div class="burst" id="burst"></div>
+        <article class="slip" id="slip" hidden aria-hidden="true">
+          <div class="slip-top"></div>
+          <div class="slip-head"><span id="slip-no">FORTUNE NO. 01</span><span class="new" id="slip-new">NEW!</span></div>
+          <p class="q" id="q"></p>
+          <div class="from"><i class="ico heart"></i><span>From: Sephiroth</span></div>
+        </article>
+      </div>
+      <div class="row">
+        <button class="btn big" id="touch" type="button"><i class="ico heart"></i><span id="touch-label">Touch here : Aerith</span></button>
+        <button class="btn butter" id="to-book" type="button" hidden><i class="ico star"></i><span>Fortune book</span></button>
+      </div>
+    </div>
+  </section>
+
+  <section class="sec" id="book">
+    <div class="wrap center">
+      <span class="tag">WORLD 1-3</span>
+      <h2 class="h">FORTUNE BOOK</h2>
+      <div class="px book">
+        <div class="meter"><span>FOUND</span><div class="bar"><i id="barfill"></i></div><b id="count">0/30</b></div>
+        <div class="grid" id="grid"></div>
+        <div class="reader" id="reader" aria-live="polite"></div>
+      </div>
+    </div>
+  </section>
+
+  <footer class="goal" id="goal">
+    <div class="hill"></div>
+    <div class="flag" aria-hidden="true"></div>
+    <div class="ground"></div>
+    <div class="wrap center">
+      <div class="px msg">
+        <p style="margin:0">Good luck, keep on learning, and try your best, Aerith. Come back for a new cookie whenever you want one.</p>
+        <p class="sig"><i class="ico heart"></i>From: Sephiroth</p>
+      </div>
+      <button class="btn mint" id="again" type="button"><i class="ico star"></i><span>Back to title</span></button>
+    </div>
+  </footer>
+</main>
+
+<div class="toast" id="toast" role="status"></div>
+<div class="burst" id="conf" style="position:fixed;left:50%;top:42%;z-index:25"></div>
+<p class="sr" id="sr" aria-live="polite"></p>
+
+<script>
+(()=>{
+'use strict';
+const $=(s,r=document)=>r.querySelector(s), $$=(s,r=document)=>[...r.querySelectorAll(s)];
+const reduce=matchMedia('(prefers-reduced-motion: reduce)').matches;
+const INK='#3a2a5e';
+const pad=n=>String(n).padStart(2,'0');
+
+/* ================= content ================= */
+const FORTUNES=[
+"Good luck on your next exam. You already did the hard part by showing up.",
+"Every page you read today is a power-up for tomorrow.",
+"Keep on learning. Your brain levels up each time you try.",
+"Try your best. That is always enough for this level.",
+"A tricky problem is just a boss waiting for your strategy.",
+"Small study sessions beat big panics. You are doing great.",
+"Mistakes are save points. See what happened, then go again.",
+"Your notes are a treasure map. Follow them to a great score.",
+"Lucky stars are lining up behind your next test.",
+"Curiosity is your best weapon. Keep it sharp.",
+"Slow progress is still progress. Keep walking.",
+"You do not need to know everything yet. You only need to start.",
+"Rest is part of studying. Take a break, then come back stronger.",
+"Today's confusion is tomorrow's aha moment.",
+"Ask the question. Someone else in the room needed it too.",
+"Your hard work is quietly adding up. Trust it.",
+"Believe in the version of you who already passed.",
+"One more chapter, one more star. You can do it.",
+"Good luck with your project. Your ideas are worth sharing.",
+"Learning is a long adventure, and you are a great explorer.",
+"Take a deep breath. You studied for this.",
+"Be proud of every question you tried, even the wrong ones.",
+"Each new word you learn unlocks a new door.",
+"Your future self is cheering for you right now.",
+"Study a little, smile a lot, and keep going.",
+"The best grades grow from patient practice.",
+"You are smarter than you think and braver than you know.",
+"When the quiz feels hard, remember that you have beaten hard before.",
+"Keep your pencil sharp and your heart light.",
+"Whatever the result, you gave it your all. That is a win."
+];
+
+const FL=[
+ {name:'Strawberry Milk',sp:'Sparkle Boost',light:'#ffe6ee',base:'#ffb3cf',dark:'#f288ae',card:'#ffd3e4',st:[5,5,3]},
+ {name:'Matcha Cloud',sp:'Calm Focus',light:'#eaffdc',base:'#b7ec9a',dark:'#86cf6e',card:'#c7f5e0',st:[4,2,5]},
+ {name:'Honey Butter',sp:'Sunny Mood',light:'#fff5bf',base:'#ffd96a',dark:'#f0b13e',card:'#fff0b0',st:[4,4,4]},
+ {name:'Blueberry Pop',sp:'Quick Thinking',light:'#e3e9ff',base:'#a9b8ff',dark:'#7d8fe8',card:'#dbe2ff',st:[3,3,5]},
+ {name:'Cocoa Moon',sp:'Night Owl Power',light:'#dcb694',base:'#b27a55',dark:'#7c4d36',card:'#e5d4ff',st:[5,3,4]}
+];
+const STATS=[['LUCK','var(--pink-d)'],['SWEET','var(--butter-d)'],['FOCUS','var(--lav-d)']];
+
+/* ================= save ================= */
+const KEY='aerith-lucky-cookie-v1';
+const st={got:[],flavor:0,mute:false};
+try{const s=JSON.parse(localStorage.getItem(KEY)||'null');
+  if(s){st.got=Array.isArray(s.got)?s.got.filter(n=>Number.isInteger(n)&&n>=0&&n<30):[];
+    st.flavor=(Number.isInteger(s.flavor)&&s.flavor>=0&&s.flavor<FL.length)?s.flavor:0;st.mute=!!s.mute}}catch(e){}
+const got=new Set(st.got);
+const save=()=>{st.got=[...got];try{localStorage.setItem(KEY,JSON.stringify(st))}catch(e){}};
+
+/* ================= pixel sprite factory ================= */
+function drawMap(map,pal){const h=map.length,w=map[0].length,c=document.createElement('canvas');c.width=w;c.height=h;const x=c.getContext('2d');
+  map.forEach((row,j)=>[...row].forEach((ch,i)=>{if(pal[ch]){x.fillStyle=pal[ch];x.fillRect(i,j,1,1)}}));return c}
+function gen(w,h,fn,line){const g=Array.from({length:h},(_,y)=>Array.from({length:w},(_,x)=>fn(x,y)||null));
+  const c=document.createElement('canvas');c.width=w;c.height=h;const t=c.getContext('2d');const has=(x,y)=>g[y]&&g[y][x];
+  for(let y=0;y<h;y++)for(let x=0;x<w;x++){let col=g[y][x];
+    if(!col&&line&&(has(x-1,y)||has(x+1,y)||has(x,y-1)||has(x,y+1)))col=line;
+    if(col){t.fillStyle=col;t.fillRect(x,y,1,1)}}
+  return c}
+const STAR=['....o....','...oyo...','...oyo...','ooooyoooo','oywyyyyyo','.oyyyyyo.','..oyyyo..','..oyoyo..','..oo.oo..'];
+const HEART=['.ooo.ooo.','oRRRoRRRo','oRwRRRRRo','oRRRRRRRo','.oRRRRRo.','..oRRRo..','...oRo...','....o....'];
+const SPARK=['...y...','...y...','..yyy..','yyywyyy','..yyy..','...y...','...y...'];
+const CRUMB=['.o.','ooo','.o.'];
+const AL=['.....o.','....oo.','...ooo.','..oooo.','.ooooo.','..oooo.','...ooo.','....oo.','.....o.'];
+const AR=AL.map(r=>[...r].reverse().join(''));
+const PAL={o:INK,y:'#ffe27a',w:'#fffbe0',R:'#ff6f9f'};
+const SP={};
+SP.star=drawMap(STAR,PAL); SP.heart=drawMap(HEART,{...PAL,w:'#ffd0e0'});
+SP.spark=drawMap(SPARK,{y:'#ffffff',w:'#ffe27a'}); SP.crumb=drawMap(CRUMB,{o:'#e9b872'});
+SP.al=drawMap(AL,{o:INK}); SP.ar=drawMap(AR,{o:INK});
+SP.flower=gen(15,15,(x,y)=>{const dx=x+.5-7.5,dy=y+.5-7.5;
+  if(dx*dx+dy*dy<=3.6)return '#ffe27a';
+  for(let k=0;k<5;k++){const a=k*Math.PI*2/5-Math.PI/2,px=Math.cos(a)*4.3,py=Math.sin(a)*4.3;
+    if((dx-px)**2+(dy-py)**2<=7.3)return dy>1?'#ff8fb8':'#ffb3d1'}},'#7a63b3');
+function cloud(w,h,discs,clip,shadeY){return gen(w,h,(x,y)=>{if(y>clip)return;
+  for(const[d,e,r]of discs)if((x+.5-d)**2+(y+.5-e)**2<=r*r)return y>=shadeY?'#e6e1ff':'#ffffff'},'#b8a9f0')}
+SP.cloudA=cloud(40,20,[[9,11,6],[19,8,8],[30,11,6.5],[24,13,5],[13,13,5]],16,13);
+SP.cloudB=cloud(30,16,[[7,9,5],[15,6,6.5],[23,9,5.5]],13,11);
+function rng(seed){return()=>(seed=(seed*1664525+1013904223)>>>0)/4294967296}
+function hillTile(base,a1,a2,ph,main,edge,dark,flowers,seed){
+  const W=160,H=64,c=document.createElement('canvas');c.width=W;c.height=H;const t=c.getContext('2d'),r=rng(seed);
+  for(let x=0;x<W;x++){
+    const y0=Math.round(base-a1*Math.sin(2*Math.PI*x/W+ph)-a2*Math.sin(2*Math.PI*3*x/W+ph*2));
+    for(let y=y0;y<H;y++){const d=y-y0;t.fillStyle=d<2?edge:((x+y)%4===0&&d>5&&d<14?dark:main);t.fillRect(x,y,1,1)}
+    if(flowers&&r()<.07){t.fillStyle='#fff';t.fillRect(x,y0-2,1,1);t.fillStyle='#ff9cc2';t.fillRect(x-1,y0-1,1,1);t.fillRect(x+1,y0-1,1,1);t.fillStyle='#ffe27a';t.fillRect(x,y0-1,1,1)}}
+  return c}
+SP.hill1=hillTile(26,7,3,.5,'#cdbbff','#e3d9ff','#b9a5f5',false,1);
+SP.hill2=hillTile(34,6,4,2,'#9eeccf','#c2f7e4','#7fd8b6',false,2);
+SP.hill3=hillTile(44,5,3,4,'#79dc9b','#a2f0b8','#5cc783',true,3);
+SP.ground=(()=>{const c=document.createElement('canvas');c.width=16;c.height=14;const t=c.getContext('2d');
+  for(let y=0;y<14;y++)for(let x=0;x<16;x++){let col;
+    if(y===0)col='#b8f7a5';else if(y===1)col='#7fe08f';else if(y===2)col=(x%4===1)?'#2f8f55':'#45b56b';else if(y===3)col=(x%4===1)?'#45b56b':'#2f8f55';
+    else col=(y===8||((x+(y>>1)*3)%8===0&&y>5))?'#bd7f4e':'#d9a46f';
+    t.fillStyle=col;t.fillRect(x,y,1,1)}return c})();
+const root=document.documentElement.style;
+for(const k of ['star','heart','al','ar','crumb','spark','hill1','hill2','hill3','ground'])root.setProperty('--spr-'+k,`url(${SP[k].toDataURL()})`);
+
+/* ================= the cookie ================= */
+const CW=34,CH=26,BAY=[[0,.5],[.75,.25]];
+function cookieGrid(f,stage){
+  const g=Array.from({length:CH},()=>Array(CW).fill(null));
+  const lobe=(x,y,cx)=>((x+.5-cx)/10.4)**2+((y+.5-13)/10.5)**2<=1;
+  for(let y=0;y<CH;y++)for(let x=0;x<CW;x++){
+    if(!(lobe(x,y,11.4)||lobe(x,y,22.6)))continue;
+    const v=(y-13)/10.5*.8+(x-17)/17*.3,b=BAY[y&1][x&1];let c=f.base;
+    if(v>.2){if((v-.2)/.35>b)c=f.dark}else if(v<-.3){if((-.3-v)/.35>b)c=f.light}
+    if(((x+.5-7.5)/2.6)**2+((y+.5-7)/1.4)**2<=1)c=f.light;
+    g[y][x]=c}
+  const P=(x,y,c)=>{if(g[y])g[y][x]=c};
+  const S=(x,y,c)=>{if(g[y]&&g[y][x])g[y][x]=c};
+  for(let y=4;y<=10;y++)S(16,y,f.dark);
+  for(let y=17;y<=21;y++)S(16,y,f.dark);
+  if(stage===0){[10,11,22,23].forEach(x=>[11,12,13].forEach(y=>P(x,y,INK)));P(10,11,'#ffffff');P(22,11,'#ffffff')}
+  else [[9,12],[10,11],[11,11],[12,12],[21,12],[22,11],[23,11],[24,12]].forEach(([x,y])=>P(x,y,INK));
+  for(const x of [5,6,7,8,25,26,27,28])for(const y of [15,16]){if((y===16)&&(x===5||x===28))continue;P(x,y,'#ff7fae')}
+  (stage<2?[[15,15],[16,16],[17,16],[18,15]]:[[16,15],[17,15],[16,16],[17,16]]).forEach(([x,y])=>P(x,y,INK));
+  if(stage>=1)[[16,5],[17,6],[16,7],[17,8],[16,9]].forEach(([x,y])=>S(x,y,INK));
+  if(stage>=2)[[14,6],[13,7],[14,8],[13,9],[19,6],[20,7],[19,8],[20,9],[17,17],[16,18],[17,19],[16,20]].forEach(([x,y])=>S(x,y,INK));
+  return g}
+function paint(cv,g,x0,x1){cv.width=x1-x0;cv.height=CH;const t=cv.getContext('2d');
+  const n=(x,y)=>g[y]&&g[y][x];
+  for(let y=0;y<CH;y++)for(let x=x0;x<x1;x++){let c=g[y][x];
+    if(!c&&(n(x-1,y)||n(x+1,y)||n(x,y-1)||n(x,y+1)))c=INK;
+    if(c){t.fillStyle=c;t.fillRect(x-x0,y,1,1)}}}
+
+/* ================= sound ================= */
+let AC=null;
+function ac(){if(!AC){try{AC=new(window.AudioContext||window.webkitAudioContext)()}catch(e){}}if(AC&&AC.state==='suspended')AC.resume();return AC}
+function tone(f,t0,d,type,v,f2){const a=ac();if(!a||st.mute)return;const o=a.createOscillator(),g=a.createGain(),t=a.currentTime+t0;
+  o.type=type||'square';o.frequency.setValueAtTime(f,t);if(f2)o.frequency.exponentialRampToValueAtTime(f2,t+d);
+  g.gain.setValueAtTime(v||.045,t);g.gain.exponentialRampToValueAtTime(.0001,t+d);o.connect(g);g.connect(a.destination);o.start(t);o.stop(t+d+.02)}
+const sfx={
+  start:()=>[523,659,784,1047].forEach((f,i)=>tone(f,i*.08,.12)),
+  tap:n=>tone(300+n*120,0,.14,'square',.06,150+n*60),
+  crack:()=>{tone(200,0,.18,'sawtooth',.07,60);tone(1200,.05,.1,'square',.04,300)},
+  reveal:()=>[659,784,988,1319,1568].forEach((f,i)=>tone(f,i*.07,.14)),
+  type:()=>tone(1100+Math.random()*400,0,.025,'square',.012),
+  select:()=>{tone(784,0,.07);tone(1175,.07,.1)},
+  clear:()=>[523,659,784,1047,784,1047,1319,1568].forEach((f,i)=>tone(f,i*.1,.16,'square',.05))
+};
+
+/* ================= helpers ================= */
+const toastEl=$('#toast');let toastT;
+function toast(m){toastEl.textContent=m;toastEl.classList.add('show');clearTimeout(toastT);toastT=setTimeout(()=>toastEl.classList.remove('show'),2000)}
+function burst(box,n,dist){for(let i=0;i<n;i++){const p=document.createElement('i');p.className='pt';
+  const a=Math.random()*Math.PI*2,d=dist*(.5+Math.random()*.9);
+  p.style.setProperty('--dx',Math.cos(a)*d+'px');p.style.setProperty('--dy',(Math.sin(a)*d*.8-30)+'px');
+  p.style.backgroundImage=`var(--spr-${['star','heart','crumb','spark'][i%4]})`;p.style.animationDelay=(Math.random()*.12)+'s';
+  box.appendChild(p);setTimeout(()=>p.remove(),1300)}}
+const smooth=el=>el.scrollIntoView({behavior:reduce?'auto':'smooth',block:'start'});
+
+/* ================= parallax ================= */
+const fx=$('#fx'),layers=[],hills=$$('.hill[data-s]').map(el=>({el,s:+el.dataset.s}));
+function buildFx(){
+  $$('.fl',fx).forEach(n=>n.remove());layers.length=0;
+  const vh=innerHeight,docH=Math.max(document.documentElement.scrollHeight,vh*3)+400;
+  const cfg=[{k:.04,kind:'spark',sc:3,per:38},{k:.12,kind:'cloudB',sc:3,per:190,an:'sway'},{k:.28,kind:'cloudA',sc:5,per:330,an:'sway'},{k:.5,kind:'mix',sc:4,per:260,an:'bob'}];
+  cfg.forEach((c,ci)=>{
+    const h=vh+c.k*(docH-vh)+200,L=document.createElement('div'),r=rng(77+ci*13);
+    L.className='fl';L.style.height=h+'px';
+    const n=Math.round(h/c.per);
+    for(let i=0;i<n;i++){
+      const key=c.kind==='mix'?['star','heart','flower'][i%3]:c.kind,src=SP[key],im=new Image();
+      im.alt='';im.draggable=false;im.src=src.toDataURL();
+      im.style.width=src.width*c.sc+'px';im.style.left=(r()*94-2)+'%';im.style.top=(i/n*h+r()*(h/n)*.8)+'px';
+      if(c.kind==='spark'){im.className='tw';im.style.animationDelay=(r()*2.4)+'s';if(i%3===0)im.style.opacity='.8'}
+      else{im.className=c.an;im.style.animationDelay=(-r()*8)+'s';if(c.kind!=='mix')im.style.opacity=ci===1?'.85':'.95'}
+      L.appendChild(im)}
+    fx.appendChild(L);layers.push({el:L,k:c.k})});
+  update()}
+let tick=false;
+function update(){tick=false;if(reduce)return;const y=window.scrollY;
+  layers.forEach(l=>l.el.style.transform=`translate3d(0,${-y*l.k}px,0)`);
+  hills.forEach(h=>h.el.style.transform=`translate3d(0,${y*h.s}px,0)`)}
+addEventListener('scroll',()=>{if(!tick){tick=true;requestAnimationFrame(update)}},{passive:true});
+let rz;addEventListener('resize',()=>{clearTimeout(rz);rz=setTimeout(buildFx,200)});
+
+/* ================= hero + carousel ================= */
+const heroC=$('#hero-cookie');
+const drawHero=()=>paint(heroC,cookieGrid(FL[st.flavor],0),0,CW);
+const track=$('#track'),dotsBox=$('#dots'),slides=[],dots=[];let active=0;
+FL.forEach((f,i)=>{
+  const a=document.createElement('article');a.className='slide';a.style.setProperty('--c',f.card);
+  a.setAttribute('aria-roledescription','slide');a.setAttribute('aria-label',`${i+1} of ${FL.length}: ${f.name}`);
+  const cv=document.createElement('canvas');paint(cv,cookieGrid(f,0),0,CW);
+  a.innerHTML=`<div class="s-no">P1 &nbsp;${pad(i+1)}/${pad(FL.length)}</div><div class="s-cookie"></div><div class="s-name">${f.name}</div><div class="s-sp">Special: ${f.sp}</div>`;
+  $('.s-cookie',a).appendChild(cv);
+  const sb=document.createElement('div');sb.className='stats';
+  STATS.forEach(([n,col],j)=>{const r=document.createElement('div');r.className='stat';r.style.setProperty('--bar',col);
+    r.innerHTML=`<span>${n}</span><span class="pips">${[0,1,2,3,4].map(k=>`<i class="${k<f.st[j]?'f':''}"></i>`).join('')}</span>`;sb.appendChild(r)});
+  a.appendChild(sb);
+  a.addEventListener('click',()=>{if(active!==i)go(i)});
+  track.appendChild(a);slides.push(a);
+  const d=document.createElement('button');d.type='button';d.setAttribute('aria-label',`Show ${f.name}`);d.addEventListener('click',()=>go(i));dotsBox.appendChild(d);dots.push(d)});
+function setOn(i){active=i;slides.forEach((s,j)=>s.classList.toggle('on',j===i));dots.forEach((d,j)=>d.setAttribute('aria-current',String(j===i)))}
+function nearest(){const mid=track.scrollLeft+track.clientWidth/2;let b=0,bd=1e9;
+  slides.forEach((s,i)=>{const d=Math.abs(s.offsetLeft+s.offsetWidth/2-mid);if(d<bd){bd=d;b=i}});return b}
+function go(i,instant){i=((i%FL.length)+FL.length)%FL.length;const s=slides[i];
+  track.scrollTo({left:s.offsetLeft-(track.clientWidth-s.offsetWidth)/2,behavior:(reduce||instant)?'auto':'smooth'});setOn(i);sfx.select&&!instant&&tone(880,0,.05,'square',.03)}
+let sT=false;track.addEventListener('scroll',()=>{if(!sT){sT=true;requestAnimationFrame(()=>{sT=false;setOn(nearest())})}},{passive:true});
+track.addEventListener('keydown',e=>{if(e.key==='ArrowRight'){e.preventDefault();go(active+1)}else if(e.key==='ArrowLeft'){e.preventDefault();go(active-1)}});
+$('#prev').addEventListener('click',()=>go(active-1));
+$('#next').addEventListener('click',()=>go(active+1));
+$('#start').addEventListener('click',()=>{sfx.start();smooth($('#select'))});
+
+/* ================= stage ================= */
+const cookie=$('#cookie'),hl=$('#half-l'),hr=$('#half-r'),slip=$('#slip'),touch=$('#touch'),tlabel=$('#touch-label'),
+  hint=$('#hint'),toBook=$('#to-book'),tapsBox=$('#taps'),sr=$('#sr'),qEl=$('#q');
+let taps=0,phase='idle',cur=-1,typeT,slipT,last=-1;
+for(let i=0;i<3;i++){const h=document.createElement('i');h.className='ico heart off';tapsBox.appendChild(h)}
+const hearts=$$('.ico',tapsBox);
+function paintStage(stage){const g=cookieGrid(FL[st.flavor],stage);paint(hl,g,0,17);paint(hr,g,17,34)}
+function setHearts(){hearts.forEach((h,i)=>h.classList.toggle('off',i>=taps))}
+function shake(){const c=$('.cookie-in',cookie);c.classList.remove('shk');void c.offsetWidth;c.classList.add('shk')}
+function pick(){const all=[...Array(30).keys()],pool=all.filter(i=>!got.has(i));
+  const src=pool.length?pool:all.filter(i=>i!==last);return src[Math.floor(Math.random()*src.length)]}
+function typeText(t){clearInterval(typeT);if(reduce){qEl.textContent=t;return}
+  qEl.textContent='';let i=0;typeT=setInterval(()=>{i++;qEl.textContent=t.slice(0,i);if(i%2===0)sfx.type();if(i>=t.length)clearInterval(typeT)},26)}
+function tap(){
+  if(phase!=='idle')return;
+  taps++;setHearts();hint.hidden=true;
+  if(taps<3){paintStage(taps);shake();sfx.tap(taps);burst($('#burst'),4,70);tlabel.textContent=taps===1?'Again! 2 more':'Last tap!'}
+  else crack()}
+function crack(){
+  phase='open';paintStage(2);sfx.crack();cookie.disabled=true;cookie.classList.remove('idle');cookie.classList.add('open');
+  burst($('#burst'),18,130);
+  tlabel.textContent='Another cookie';touch.classList.add('mint');
+  cur=pick();const isNew=!got.has(cur);
+  slipT=setTimeout(()=>{
+    $('#slip-no').textContent=`FORTUNE NO. ${pad(cur+1)}`;$('#slip-new').hidden=!isNew;
+    slip.hidden=false;slip.setAttribute('aria-hidden','false');slip.classList.remove('in');void slip.offsetWidth;slip.classList.add('in');
+    sfx.reveal();typeText(FORTUNES[cur]);sr.textContent=`Fortune ${cur+1}. ${FORTUNES[cur]} From Sephiroth.`;
+    toBook.hidden=false;
+    collect(cur,isNew)},430)}
+function reset(){
+  clearTimeout(slipT);clearInterval(typeT);
+  phase='idle';taps=0;last=cur;setHearts();slip.hidden=true;slip.setAttribute('aria-hidden','true');slip.classList.remove('in');
+  cookie.disabled=false;cookie.classList.remove('open');cookie.classList.add('idle');paintStage(0);hint.hidden=false;
+  tlabel.textContent='Touch here : Aerith';touch.classList.remove('mint');toBook.hidden=true;sfx.select()}
+touch.addEventListener('click',()=>{ac();phase==='open'?reset():tap()});
+cookie.addEventListener('click',()=>{ac();tap()});
+toBook.addEventListener('click',()=>smooth($('#book')));
+$('#pick').addEventListener('click',()=>{
+  st.flavor=active;save();drawHero();paintStage(phase==='open'?2:taps);sfx.select();toast(`${FL[active].name} picked!`);smooth($('#stage'))});
+
+/* ================= book ================= */
+const grid=$('#grid'),reader=$('#reader');let selected=-1;
+function setReader(i){
+  reader.replaceChildren();
+  if(i>=0){const b=document.createElement('b'),p=document.createElement('span');b.textContent=`FORTUNE NO. ${pad(i+1)}`;p.textContent=FORTUNES[i];reader.append(b,p);return}
+  const b=document.createElement('b'),p=document.createElement('span');
+  if(got.size>=30){b.textContent='ALL 30 FOUND!';p.textContent='Level clear, Aerith. Every fortune is yours. Tap any star to read it again. From: Sephiroth.'}
+  else if(got.size===0){b.textContent='NO FORTUNES YET';p.textContent='Crack your first cookie and its star will light up here.'}
+  else{b.textContent='TAP A GOLD STAR';p.textContent='Read your old fortunes again. Gray tiles are still waiting inside cookies.'}
+  reader.append(b,p)}
+function renderBook(){
+  grid.replaceChildren();
+  for(let i=0;i<30;i++){const b=document.createElement('button');b.type='button';
+    if(got.has(i)){b.className='tile on'+(i===selected?' sel':'');b.innerHTML=`<i class="ico star"></i><span>${pad(i+1)}</span>`;b.setAttribute('aria-label',`Read fortune ${i+1}`);
+      b.addEventListener('click',()=>{selected=i;sfx.select();setReader(i);renderBook()})}
+    else{b.className='tile';b.disabled=true;b.textContent='?';b.setAttribute('aria-label',`Fortune ${i+1}, not found yet`)}
+    grid.appendChild(b)}
+  const n=got.size;$('#count').textContent=`${n}/30`;$('#barfill').style.width=(n/30*100)+'%';$('#hud-count').textContent=`${pad(n)}/30`}
+function collect(i,isNew){
+  got.add(i);save();selected=-1;renderBook();setReader(-1);
+  if(isNew&&got.size===30)setTimeout(()=>{sfx.clear();burst($('#conf'),36,260);toast('ALL 30 FORTUNES FOUND!')},1400)}
+
+/* ================= sound toggle + misc ================= */
+const snd=$('#snd');
+function syncSnd(){snd.textContent=st.mute?'SOUND OFF':'SOUND ON';snd.setAttribute('aria-pressed',String(!st.mute))}
+snd.addEventListener('click',()=>{st.mute=!st.mute;save();syncSnd();if(!st.mute){ac();tone(880,0,.08)}});
+$('#again').addEventListener('click',()=>{sfx.start();smooth($('#top'))});
+
+/* ================= boot ================= */
+syncSnd();drawHero();paintStage(0);renderBook();setReader(-1);setOn(st.flavor);
+requestAnimationFrame(()=>go(st.flavor,true));
+buildFx();
+if(document.fonts&&document.fonts.ready)document.fonts.ready.then(()=>{buildFx();go(active,true)});
+addEventListener('load',()=>{buildFx();go(active,true)});
+})();
+</script>
+
+</body></html>
